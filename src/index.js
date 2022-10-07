@@ -10,19 +10,70 @@ app.use(cors());
 const users = [];
 
 function checksExistsUserAccount(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers
+
+  const user = users.find(user => user.username === username)
+
+  if(!user) {
+    return response.status(404).json({ error: 'User not found'})
+   }
+
+   request.user = user
+
+   return next()
 }
 
 function checksCreateTodosUserAvailability(request, response, next) {
-  // Complete aqui
+ const { user } = request 
+
+ if(user.todos.length >= 10 && user.pro === false) {
+  return response.status(403).json({ error: 'Buy the PRO version to do more notes'})
+ }
+
+ return next()
 }
 
 function checksTodoExists(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers
+  const { id } = request.params
+
+  const user = users.find(user => user.username === username)
+  const uuidValidate = validate(id)
+  
+  if(!user) {
+    return response.status(404).json({ error: 'User not found'})
+  } 
+  if(!uuidValidate){
+    return response.status(400).json({ error: 'Invalid UUID'})
+  }
+
+  const todoById = user.todos.filter(todos => todos.id === id)
+  if(!user.todos[0]) {
+    return response.status(404).json({ error: 'This user has no annotations'})
+  }
+  if(!todoById[0]) {
+    return response.status(404).json({ error: 'This note does not belong to this user'})
+  }
+
+  request.todo = todoById[0]
+
+  return next()
+
 }
 
 function findUserById(request, response, next) {
-  // Complete aqui
+  const { id } = request.params
+
+  const userById = users.find(user => user.id === id)
+
+  if(!userById) {
+    return response.status(404).json({ error: 'Please enter a valid user ID' })
+  }
+  
+  request.user = userById
+
+  return next()
+
 }
 
 app.post('/users', (request, response) => {
